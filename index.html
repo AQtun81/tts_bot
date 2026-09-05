@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <title>tts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
+  <style>
+    body
+    {
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: #222;
+      color: #CCC;
+    }
+    
+    .chatMessageUsername
+    {
+      font-weight: bold;
+      font-family: "JetBrains Mono", monospace;
+    }
+    
+    #chatContainer > div > h4
+    {
+      padding: 2px 10px;
+      margin: 0;
+      min-width: 240px;
+    }
+    
+    #chatContainer > div > h4:first-child
+    {
+      text-align: right;
+    }
+    
+    #chatContainer > div
+    {
+      display: flex;
+    }
+    
+    #chatContainer
+    {
+      background-color: #000;
+      max-height: 800px;
+      width: 800px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <input type="text" name="channel" id="channel" placeholder="channel name" onchange="setChannelName(this.value)">
+    <input type="password" name="secret" id="secret" placeholder="secret key" onchange="setSecretKey(this.value)">
+    <label for="volume">
+      volume
+    </label>
+    <input type="range" name="volume" id="volume" min="0" max="100" value="100" onchange="setAudioVolume(Number(this.value) / 100.0)">
+    <label for="auto-connect">
+      auto-connect
+    </label>
+    <input type="checkbox" name="auto-connect" id="auto-connect" onchange="setAutoConnect(this.checked)">
+    <input type="button" value="connect" onclick="connectToChat()">
+    <p id="out"></p>
+  </div>
+  <h1>chat</h1>
+  <div id="chatContainer"></div>
+  <script type='module' src="js/main.js"></script>
+  <script src="js/script.js"></script>
+</body>
+</html>
