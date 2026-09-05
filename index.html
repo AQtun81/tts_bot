@@ -44,12 +44,22 @@
       width: 800px;
       overflow-y: auto;
     }
+
+    #secret
+    {
+      -webkit-text-security: disc;
+    }
+    
+    #secret:focus
+    {
+      -webkit-text-security: none;
+    }
   </style>
 </head>
 <body>
   <div>
     <input type="text" name="channel" id="channel" placeholder="channel name" onchange="setChannelName(this.value)">
-    <input type="password" name="secret" id="secret" placeholder="secret key" onchange="setSecretKey(this.value)">
+    <input type="text" name="secret" id="secret" placeholder="secret key" onchange="setSecretKey(this.value)">
     <label for="volume">
       volume
     </label>
@@ -58,7 +68,7 @@
       auto-connect
     </label>
     <input type="checkbox" name="auto-connect" id="auto-connect" onchange="setAutoConnect(this.checked)">
-    <input type="button" value="connect" onclick="connectToChat()">
+    <input type="button" value="connect" id="connectButton" onclick="connectToChat()">
     <p id="out"></p>
   </div>
   <h1>chat</h1>

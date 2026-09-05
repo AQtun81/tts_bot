@@ -1,8 +1,7 @@
 ﻿const messageElements = [];
-const messageElementsCount = 1024;
+const messageElementsCount = 512;
 let messageElementsCounter = 0;
 let AudioPlayer = new Audio();
-let IsPlaying = false;
 
 {
     const msgContainer = document.getElementById("chatContainer");
@@ -26,12 +25,12 @@ let IsPlaying = false;
 
 async function onLoad()
 {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    if (!window.csReady) await new Promise(resolve => document.addEventListener('cs:ready', resolve, { once: true }));
 
-    let volume = Number(window.localStorage.getItem('volume'));
-    let channel = String(window.localStorage.getItem('channel'));
+    let volume = Number(window.localStorage.getItem('tts-volume') ?? 0.5);
+    let channel = window.localStorage.getItem('channel');
     let autoConnect = window.localStorage.getItem('auto-connect') === 'true';
-    let secret = String(window.localStorage.getItem('secret'));
+    let secret = window.localStorage.getItem('secret');
 
     document.getElementById("volume").value = volume * 100;
     document.getElementById("channel").value = channel;
@@ -39,7 +38,6 @@ async function onLoad()
     document.getElementById("secret").value = secret;
 
     AudioPlayer.volume = volume;
-    window.cs.setChannelName(channel);
     window.cs.setSecretKey(secret);
     if (autoConnect) connectToChat();
 }
@@ -47,7 +45,8 @@ async function onLoad()
 function displayChatMessage(username, color, msgContent)
 {
     const parentElement = messageElements[messageElementsCounter].parentElement;
-    if (parentElement) parentElement.appendChild(messageElements[messageElementsCounter]);
+    if (!parentElement) return;
+    parentElement.appendChild(messageElements[messageElementsCounter]);
     
     const children = messageElements[messageElementsCounter].children;
     children[0].innerText = username;
@@ -63,44 +62,45 @@ async function playAudio(dataBytes)
 {
     AudioPlayer.pause();
     AudioPlayer.removeAttribute("src");
+    AudioPlayer.currentTime = 0;
     AudioPlayer.load();
     
     const blob = new Blob([dataBytes], {
         type: "audio/mpeg"
     });
-    
-    let currentUrl = URL.createObjectURL(blob);
 
-    AudioPlayer = new Audio();
-    AudioPlayer.src = currentUrl;
-    AudioPlayer.preload = "auto";
+    const abortController = new AbortController();
+    let blobUrl;
+    try
+    {
+        blobUrl = URL.createObjectURL(blob);
+        AudioPlayer.src = blobUrl;
+        AudioPlayer.preload = "auto";
 
-    await AudioPlayer.play();
-    
-    IsPlaying = true;
-    
-    await new Promise(resolve => {
-        AudioPlayer.addEventListener("ended", resolve, { once: true });
-    });
-    
-    IsPlaying = false;
-}
+        const playbackEnded = new Promise((resolve, reject) => {
+            AudioPlayer.addEventListener("ended", resolve, { once: true, signal: abortController.signal });
+            AudioPlayer.addEventListener("error", reject, { once: true, signal: abortController.signal });
+        });
 
-function isAudioPlaying()
-{
-    return IsPlaying;
+        await AudioPlayer.play();
+        await playbackEnded;
+    }
+    finally
+    {
+        abortController.abort();
+        URL.revokeObjectURL(blobUrl);
+    }
 }
 
 function setAudioVolume(value)
 {
-    window.localStorage.setItem('volume', value);
+    window.localStorage.setItem('tts-volume', value);
     AudioPlayer.volume = value;
 }
 
 function setChannelName(value)
 {
     window.localStorage.setItem('channel', value);
-    window.cs.setChannelName(value);
 }
 
 function setSecretKey(value)
@@ -116,7 +116,14 @@ function setAutoConnect(value)
 
 function connectToChat()
 {
-    window.cs.connectToChat();
+    let channel = window.localStorage.getItem('channel');
+    if (!channel) return;
+
+    const connectButton = document.getElementById("connectButton");
+    connectButton.disabled = true;
+    connectButton.value = `connected to ${channel}`;
+    
+    window.cs.connectToChat(channel);
 }
 
 onLoad();
